@@ -6,10 +6,7 @@ const logger = require('morgan');
 
 const app = express();
 
-// database connection (important to init Sequelize)
-require('./db.client');
-
-// model
+// database dependency
 const Article = require('./article.js');
 
 // view engine setup
@@ -18,7 +15,7 @@ app.set('view engine', 'twig');
 
 app.use(logger('dev'));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({extended: false}));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -26,19 +23,16 @@ app.get('/', async function (req, res, next) {
   let articles = [];
   try {
     articles = await Article.findAll();
-  } catch (e) {
-    console.error("Erreur DB:", e);
-  }
-  res.render('index', { articles });
+  } catch (e) {}
+  res.render('index', {articles});
 });
 
 app.post('/', async function (req, res, next) {
-  const { title, content } = req.body;
-  try {
-    await Article.create({ title, content });
-  } catch (e) {
-    console.error("Erreur lors de l'insertion:", e);
-  }
+  const {title, content} = req.body;
+  console.log(req.body);
+  console.log(title);
+  console.log(content);
+  await Article.create({ title, content });
   res.redirect('/');
 });
 
@@ -46,9 +40,7 @@ app.get('/articles', async function (req, res, next) {
   let articles = [];
   try {
     articles = await Article.findAll();
-  } catch (e) {
-    console.error("Erreur DB:", e);
-  }
+  } catch (e) {}
   res.send(JSON.stringify(articles, null, 2));
 });
 
@@ -59,9 +51,11 @@ app.use(function (req, res, next) {
 
 // error handler
 app.use(function (err, req, res, next) {
+  // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
+  // render the error page
   res.status(err.status || 500);
   res.render('error');
 });
